@@ -2,8 +2,8 @@ package com.immanuel.app;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.LinkedList;
+import java.util.List;
 import javax.swing.*;
 
 public class FloppyBird extends JPanel implements ActionListener, KeyListener {
@@ -38,34 +38,37 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    // the pipes
-    // topPipe
-    int topX = boardWidth;
-    int topY = 0;
+    // Pipes
+    int pipeX = boardWidth;
+    int pipeY = 0;
+    int pipeWidth = 64;
+    int pipeHeight = 512;
 
-    int topWidth = boardWidth / 6;
-    int topHeight = birdHeight / 3;
+    class Pipe {
+        int x = pipeX;
+        int y = pipeY;
+        int width = pipeWidth;
+        int height = pipeHeight;
+        boolean passed = false;
+        Image pipe;
 
-    class TopPipe {
-        int x = topX;
-        int y = topY;
-
-        int width = topWidth;
-        int height = topHeight;
-
-        Image topPipe;
-
-        TopPipe(Image image) {
-            this.topPipe = image;
+        Pipe(Image image) {
+            this.pipe = image;
         }
     }
 
     // bird logic ----------------------------
     Bird bird;
-    int velocityUp = 0;
-    int gravity = 1;
+    List<Pipe> pipes;
+    double velocityLeft = -4.0;
+    double velocityUp = 0;
+    double gravity = 0.7;
+
     // timer
+    // game
     Timer gameLoop;
+    // pipes
+    Timer pipesTimer;
 
     // constructor -------------------------------
     FloppyBird() {
@@ -84,10 +87,33 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
 
         // bird make
         bird = new Bird(birdImage);
+        pipes = new LinkedList<Pipe>();
+
+        // pipes
+        pipesTimer = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                generatePipe();
+            }
+        });
+        pipesTimer.start();
 
         // timer for frames
         gameLoop = new Timer(1000 / 60, this);
         gameLoop.start();
+    }
+
+    // method to create a pipe and add it to the panel
+    public void generatePipe() {
+        int randomPipeY = (int) (pipeY - pipeHeight / 4 - Math.random() * pipeHeight / 2);
+        int openingSpace = pipeHeight / 4;
+        Pipe topPipe = new Pipe(topPipeImage);
+        topPipe.y = randomPipeY;
+        pipes.add(topPipe);
+
+        Pipe bottomPipe = new Pipe(bottomPipeImage);
+        bottomPipe.y = topPipe.y + topPipe.height + openingSpace + 50;
+        pipes.add(bottomPipe);
     }
 
     // drawing all the components on the screen ------------------
@@ -99,6 +125,15 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
     private void draw(Graphics g) {
         g.drawImage(backgroundImage, 0, 0, boardWidth, boardHeight, null);
         g.drawImage(birdImage, bird.x, bird.y, bird.width, bird.height, null);
+        // drawing the pipes logic
+        for (int i = 0; i < pipes.size(); i++) {
+            Pipe pipe1 = pipes.get(i);
+            g.drawImage(topPipeImage, pipe1.x, pipe1.y, pipe1.width, pipe1.height, null);
+        }
+        for (int i = 0; i < pipes.size(); i++) {
+            Pipe pipe2 = pipes.get(i);
+            g.drawImage(bottomPipeImage, pipe2.x, pipe2.y, pipe2.width, pipe2.height, null);
+        }
     }
 
     // move method --------------------------
@@ -106,6 +141,14 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
         bird.y = Math.max(bird.y, 0);
         velocityUp += gravity;
         bird.y += velocityUp;
+
+        for (int i = 0; i < pipes.size(); i++) {
+            Pipe pipe = pipes.get(i);
+            pipe.x += velocityLeft;
+            if (pipe.x == -pipe.width) {
+                pipes.remove(i);
+            }
+        }
     }
 
     // listens to the actions that should be performed ---------------------------
