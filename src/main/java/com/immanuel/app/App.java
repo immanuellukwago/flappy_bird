@@ -19,8 +19,8 @@ public class App {
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.add(floppyBird);
+        floppyBird.requestFocus();
         frame.pack();
-        floppyBird.requestFocus(true);
         frame.setVisible(true);
     }
 }

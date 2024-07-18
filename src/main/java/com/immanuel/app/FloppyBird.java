@@ -38,6 +38,28 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    // the pipes
+    // topPipe
+    int topX = boardWidth;
+    int topY = 0;
+
+    int topWidth = boardWidth / 6;
+    int topHeight = birdHeight / 3;
+
+    class TopPipe {
+        int x = topX;
+        int y = topY;
+
+        int width = topWidth;
+        int height = topHeight;
+
+        Image topPipe;
+
+        TopPipe(Image image) {
+            this.topPipe = image;
+        }
+    }
+
     // bird logic ----------------------------
     Bird bird;
     int velocityUp = 0;
@@ -52,6 +74,7 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
         // deal with keyListener
         setFocusable(true);
         addKeyListener(this);
+        requestFocusInWindow();
 
         // load the images
         backgroundImage = new ImageIcon(getClass().getResource("./flappybirdbg.png")).getImage();
@@ -81,7 +104,7 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
     // move method --------------------------
     public void move() {
         bird.y = Math.max(bird.y, 0);
-        velocityUp = +gravity;
+        velocityUp += gravity;
         bird.y += velocityUp;
     }
 
