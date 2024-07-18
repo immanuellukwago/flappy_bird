@@ -25,6 +25,20 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
     int birdWidth = 34;
     int birdHeight = 24;
 
+    // score
+    double score = 0.0;
+
+    // game over
+    boolean isGameOver = false;
+
+    // collision logic
+    public boolean collision(Bird a, Pipe b) {
+        return a.x < b.x + b.width &&
+                a.x + a.width > b.x &&
+                a.y < b.y + b.height &&
+                a.y + a.height > b.y;
+    }
+
     // making the bird object
     class Bird {
         int x = birdX;
@@ -49,7 +63,6 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
         int y = pipeY;
         int width = pipeWidth;
         int height = pipeHeight;
-        boolean passed = false;
         Image pipe;
 
         Pipe(Image image) {
@@ -62,7 +75,7 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
     List<Pipe> pipes;
     double velocityLeft = -4.0;
     double velocityUp = 0;
-    double gravity = 0.7;
+    double gravity = 0.5;
 
     // timer
     // game
@@ -112,7 +125,7 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
         pipes.add(topPipe);
 
         Pipe bottomPipe = new Pipe(bottomPipeImage);
-        bottomPipe.y = topPipe.y + topPipe.height + openingSpace + 50;
+        bottomPipe.y = topPipe.y + topPipe.height + openingSpace + 100;
         pipes.add(bottomPipe);
     }
 
@@ -134,6 +147,15 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
             Pipe pipe2 = pipes.get(i);
             g.drawImage(bottomPipeImage, pipe2.x, pipe2.y, pipe2.width, pipe2.height, null);
         }
+
+        // score
+        g.setColor(Color.white);
+        g.setFont(new Font("Arial", Font.PLAIN, 32));
+        if (isGameOver) {
+            g.drawString("Game Over!! " + String.valueOf((int) score), 20, 45);
+        } else {
+            g.drawString("Score: " + String.valueOf((int) score), 20, 35);
+        }
     }
 
     // move method --------------------------
@@ -148,6 +170,16 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
             if (pipe.x == -pipe.width) {
                 pipes.remove(i);
             }
+            if ((bird.x + bird.width) > (pipe.x + pipe.width)) {
+                score += 0.5; // because they are two pipes -> 1 - score
+                // score = score / 20;
+            }
+            if (collision(bird, pipe)) {
+                isGameOver = true;
+            }
+        }
+        if (bird.y >= boardHeight) {
+            isGameOver = true;
         }
     }
 
@@ -156,6 +188,10 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
     public void actionPerformed(ActionEvent e) {
         move();
         repaint();
+        if (isGameOver) {
+            gameLoop.stop();
+            pipesTimer.stop();
+        }
     }
 
     @Override
@@ -165,7 +201,16 @@ public class FloppyBird extends JPanel implements ActionListener, KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            velocityUp = -12;
+            velocityUp = -9;
+            if (isGameOver) {
+                bird.y = birdY;
+                velocityUp = 0;
+                pipes.clear();
+                score = 0;
+                isGameOver = false;
+                gameLoop.start();
+                pipesTimer.start();
+            }
         }
     }
 
